@@ -26,4 +26,6 @@ urlpatterns = [
 
     path('get/my/exercises/', api.getMyExercises),
     path('get/my/workouts/', api.getMyWorkouts),
+    path('add/workout/', api.addWorkout),
+    path('get/workout/<int:id>/', api.getWorkout),
 ]
