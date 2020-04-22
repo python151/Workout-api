@@ -277,10 +277,11 @@ def getAllWorkouts(request):
     for workout in workouts:
         rSets = []
         for set in workout.sets.all():
-            rSets.append({
-                "name": set.name,
-            })
+            rSets.append(
+                set.name
+            )
         rWorkouts.append({
-            "sets": rSets
+            "sets": rSets,
+            "id": workout.id
         })
     return JsonResponse({"success": True, "workouts": rWorkouts})
