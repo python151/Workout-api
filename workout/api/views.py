@@ -207,7 +207,80 @@ def getWorkout(request, id):
         }
     })
             
-
+def deleteWorkout(request, id):
+    session = getSessionFromReq(request)
+    if request.method != "DELETE":
+        return JsonResponse({'success': False, "message": "invalid request method"})
     
+    workout = Workout.objects.filter(id=id, users__id=session.get('_auth_user_id'))
+    if not workout.exists(): 
+        return JsonResponse({"success": False, "message": "workout does not exist or you lack permissions"})
 
+    workout = workout.get()
+    workout.delete()
+
+    return JsonResponse({
+        "success": True
+    })
+
+def changeSet(request, name, workoutId):
+    session = getSessionFromReq(request)
+    if request.method != "PUT":
+        return JsonResponse({'success': False, "message": "invalid request method"})
     
+    # getting workout
+    workout = Workout.objects.filter(id=workoutId, users__id=session['_auth_user_id'])
+    if not workout.exists():
+        return JsonResponse({"success": False, "message": "workout does not exist or you lack permissions"})
+    workout = workout.get()
+
+    # getting sets
+    workoutSet = workout.sets.filter(name=name)
+    if not workoutSet.exists(): 
+        return JsonResponse({"success": False, "message": "set does not exist or you lack permissions"})
+    workoutSets = workoutSet.all()
+    
+    # getting body data
+    data = request.body
+    body_unicode = request.body.decode('utf-8')
+    data = json.loads(body_unicode)
+
+    name, setSize, howMany = data['name'], data['setSize'], data['howMany']
+
+    # modifying the name and set size
+    for set in workoutSets:
+        set.name = name
+        set.amountOfExercise = setSize
+        set.save()
+    
+    currentHowMany = len(workoutSet)
+    # modifying the amount of sets if neccesary
+    if howMany != currentHowMany:
+        if howMany < currentHowMany:
+            for index in range(currentHowMany-howMany):
+                workoutSet[index].delete()
+        else:
+            for index in range(howMany-currentHowMany):
+                workout.sets.add(Set.objects.create(
+                    name=name,
+                    amountOfExercise=setSize,
+                ))
+                workout.save()
+
+    return JsonResponse({
+        "success": True
+    })
+
+def getAllWorkouts(request):
+    workouts = Workout.objects.order_by("-pk").all()[:20]
+    rWorkouts = []
+    for workout in workouts:
+        rSets = []
+        for set in workout.sets.all():
+            rSets.append({
+                "name": set.name,
+            })
+        rWorkouts.append({
+            "sets": rSets
+        })
+    return JsonResponse({"success": True, "workouts": rWorkouts})
