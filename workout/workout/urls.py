@@ -26,6 +26,11 @@ urlpatterns = [
 
     path('get/my/exercises/', api.getMyExercises),
     path('get/my/workouts/', api.getMyWorkouts),
+
+    path('get/all/workouts/', api.getAllWorkouts),
+
     path('add/workout/', api.addWorkout),
     path('get/workout/<int:id>/', api.getWorkout),
+    path('delete/workout/<int:id>/', api.deleteWorkout),
+    path('edit/set/<slug:name>/<int:workoutId>/', api.changeSet),
 ]
