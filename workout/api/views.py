@@ -11,7 +11,6 @@ from .models import Workout, Exercise, Set, Muscel
 def getSessionFromReq(request):
     data = request.GET.dict()
     sessKey = data.get('session-key')
-    print(sessKey)
     obj = Session.objects.filter(session_key=sessKey).get()
     return obj.get_decoded()
 
@@ -20,7 +19,6 @@ def getSessionKey(request):
 
 def login(request):
     if request.method != "GET":
-        print("sdf")
         return JsonResponse({"success": False, 'message': "invalid request method"})
     
     data = request.GET.dict()
@@ -29,7 +27,6 @@ def login(request):
 
     user = authenticate(request, username=username, password=password)
     if user is None:
-        print("not ofund")
         return JsonResponse({"success": False, 'message': "authentication failed"})
     
     log(request, user)
@@ -117,7 +114,6 @@ def getMyWorkouts(request):
     workouts = workouts.all()
 
     ret = []
-   
 
     for index, workout in enumerate(workouts):
         sets = []
@@ -142,13 +138,13 @@ def addWorkout(request):
     
     data = request.body
     body_unicode = request.body.decode('utf-8')
-    print(body_unicode)
     data = json.loads(body_unicode)
     
     workout = Workout.objects.create()
     workout.save()
     workout.users.add(User.objects.filter(id=session['_auth_user_id']).get())
     workout.save()
+
     for setv in data['sets']:
         for i in range(setv['numOfSets']):
             set = Set.objects.create(amountOfExercise=setv['setSize'], name=setv['name'])
@@ -167,39 +163,41 @@ def addWorkout(request):
 def getWorkout(request, id):
     session = getSessionFromReq(request)
     if request.method != "GET":
-        print("hi")
         return JsonResponse({
             "success": False,
             "message": "invalid request method"
         })
     
     workout = Workout.objects.filter(users__id=session.get('_auth_user_id'), id=id)
+    
     if not workout.exists():
-        print('does not exist')
         return JsonResponse({
             "success": False,
             "message": "You do not have permissions or it does not exist"
         })
+
     workout = workout.get()
     rSets = []
+
     sets = workout.sets.all()
     users = workout.users.all()
+
     for set in sets:
         hasSet = False
+
         for s in rSets:
             if s['name'] == set.name:
                 hasSet = True
                 s['howMany'] += 1
+
         if not hasSet:
             rSets.append({
                 "name": set.name,
                 "setSize": set.amountOfExercise,
                 "howMany": 1,
             })
-    rUsers = [user.username for user in users]
 
-    print(rSets)
-    print(rUsers)
+    rUsers = [user.username for user in users]
 
     return JsonResponse({
         "success": True,
