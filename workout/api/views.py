@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import json
 
-from .models import Workout, Exercise, Set, Muscel\
+from .models import Workout, Exercise, Set, Muscel
 
 def getSessionFromReq(request):
     data = request.GET.dict()
